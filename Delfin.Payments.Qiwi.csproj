@@ -344,7 +344,8 @@
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
-    <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Content\qiwiController.cs" />
+    <Compile Include="Controllers\academserviceController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -484,11 +485,17 @@
     <Compile Include="Migrations\20200421214255_21042020-gosha.designer.cs">
       <DependentUpon>20200421214255_21042020-gosha.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\20200427140545_27042020-1705.cs" />
+    <Compile Include="Migrations\20200427140545_27042020-1705.designer.cs">
+      <DependentUpon>20200427140545_27042020-1705.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\dbContextModelSnapshot.cs" />
     <Compile Include="Models\dbContext.cs" />
+    <Compile Include="Models\HotelPricing2.cs" />
     <Compile Include="Models\PaymentDetails.cs" />
     <Compile Include="Models\Payments.cs" />
     <Compile Include="Models\PaymentsQiwi.cs" />
+    <Compile Include="Models\qiwi.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -530,6 +537,8 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Views\academservice\" />
+    <Folder Include="Views\qiwi\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fonts\glyphicons-halflings-regular.woff2" />
