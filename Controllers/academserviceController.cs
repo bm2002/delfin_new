@@ -62,7 +62,7 @@ namespace qiwi.Controllers
             return View();
         }
 
-        private string GetAcademserviceXML(string postdata)
+        private string GetAcademserviceXML(string postdata) 
         {
             //using (System.IO.TextWriter writer = System.IO.File.CreateText("C:\\_1\\ex.txt")) writer.WriteLine(postdata);
             var d1 = DateTime.Now;
