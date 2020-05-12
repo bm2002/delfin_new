@@ -344,7 +344,7 @@
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
-    <Compile Include="Content\qiwiController.cs" />
+    <Compile Include="Controllers\qiwiController.cs" />
     <Compile Include="Controllers\academserviceController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -488,6 +488,22 @@
     <Compile Include="Migrations\20200427140545_27042020-1705.cs" />
     <Compile Include="Migrations\20200427140545_27042020-1705.designer.cs">
       <DependentUpon>20200427140545_27042020-1705.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\20200512101644_12052020-1316.cs" />
+    <Compile Include="Migrations\20200512101644_12052020-1316.designer.cs">
+      <DependentUpon>20200512101644_12052020-1316.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\20200512101821_12052020-1317.cs" />
+    <Compile Include="Migrations\20200512101821_12052020-1317.designer.cs">
+      <DependentUpon>20200512101821_12052020-1317.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\20200512105814_12052020-1358.cs" />
+    <Compile Include="Migrations\20200512105814_12052020-1358.designer.cs">
+      <DependentUpon>20200512105814_12052020-1358.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\20200512110450_12052020-1404.cs" />
+    <Compile Include="Migrations\20200512110450_12052020-1404.designer.cs">
+      <DependentUpon>20200512110450_12052020-1404.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\dbContextModelSnapshot.cs" />
     <Compile Include="Models\dbContext.cs" />

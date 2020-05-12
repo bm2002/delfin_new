@@ -28,6 +28,7 @@ namespace qiwi.Models
         public DbSet<PaymentDetail> PaymentDetails { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<PaymentsQiwi> _PaymentsQiwies { get; set; }
+        public DbSet<PaymentsQiwiResponse> _PaymentsQiwiResponses { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

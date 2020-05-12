@@ -2,6 +2,7 @@
 using qiwi.Models;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -15,6 +16,7 @@ namespace qiwi.Content
     {
         dbContext db = new dbContext();
 
+        CultureInfo cultureinfo = new CultureInfo("ru-RU");
 
         [HttpGet]
         public ActionResult payment(string dgcode, string summa)
@@ -64,14 +66,46 @@ namespace qiwi.Content
                 Status = resp.status.value,
                 payUrl = resp.payUrl,
                 billId = resp.billId,
-                response = text
+                response = text,
+                paymentIdqiwi = resp.payUrl.Split(new[] { "invoice_uid=" }, StringSplitOptions.None)[1].Trim()
             };
             db._PaymentsQiwies.Add(pw);
-            db.SaveChanges();
+            db.SaveChanges(); 
 
             return Json(resp.payUrl, JsonRequestBehavior.AllowGet);
         }
 
-        
+        [HttpPut]
+        public ActionResult paymentConfirm(qiwiPayment request)
+        {
+            var qp = db._PaymentsQiwies.SingleOrDefault(x => x.billId == request.payment.billId && x.paymentIdqiwi == request.payment.paymentId);
+            
+            if (qp == null) return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "Нет такого платежа");
+
+            if (qp.Amount != decimal.Parse(request.payment.amount.value.Replace(".", ","), cultureinfo))
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "Сумма платежа не совпадает");
+
+            qp.Status = request.payment.status.value;
+            qp.DateModified = DateTime.Now;
+            db.SaveChanges();
+
+            PaymentsQiwiResponse pqr = new PaymentsQiwiResponse
+            {
+                Amount = decimal.Parse(request.payment.amount.value.Replace(".", ","), cultureinfo),
+                billIdqiwi = request.payment.billId,
+                paymentIdqiwi = request.payment.paymentId,
+                date = DateTime.Now,
+                response = JsonConvert.SerializeObject(request)
+            };
+
+
+            return new HttpStatusCodeResult(HttpStatusCode.OK);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            db.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }
