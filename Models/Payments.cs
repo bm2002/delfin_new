@@ -3,10 +3,8 @@ using System.Collections.Generic;
 
 namespace qiwi.Models
 {
-    public partial class Payment
-    {
-        
-
+    public class Payment
+    {     
         public int Pm_Id { get; set; }
         public DateTime Pm_CreateDate { get; set; }
         public int Pm_CreatorKey { get; set; }
