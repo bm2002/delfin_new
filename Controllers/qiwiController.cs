@@ -90,101 +90,114 @@ namespace qiwi.Content
             return Json(resp.payUrl, JsonRequestBehavior.AllowGet);
         }
 
-        [HttpPost]
-        public ActionResult paymentConfirm2()
-        {
-            return new HttpStatusCodeResult(HttpStatusCode.OK);
-        }
+        //[HttpGet]
+        //public ActionResult paymentConfirm()
+
 
         [HttpPost]
         public ActionResult paymentConfirm(qiwiPayment request)
         {
-            var qp = db._PaymentsQiwies.SingleOrDefault(x => x.billId == request.payment.billId && x.paymentIdqiwi == request.payment.paymentId);
-            
-            if (qp == null) return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "Нет такого платежа");
+            //string jsonData = System.IO.File.ReadAllText(@"C:\json\qiwiPayment.txt");
+            //var request = JsonConvert.DeserializeObject<qiwiPayment>(jsonData);
 
-            if (qp.Amount != decimal.Parse(request.payment.amount.value.Replace(".", ","), cultureinfo))
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "Сумма платежа не совпадает");
-
-            qp.Status = request.payment.status.value;
-            qp.DateModified = DateTime.Now;
-            db.SaveChanges();
-
-            var percent = 1.0 - double.Parse(ConfigurationManager.AppSettings.Get("percent").Replace(".", ","), cultureinfo) / 100;
-
-            tbl_Dogovor dogovor = null;
-            using (var db1 = new MegatecDBDataContext(ConfigurationManager.ConnectionStrings["masterTour"].ToString()))
+            try
             {
-                dogovor = db1.tbl_Dogovors.Where(x => x.DG_CODE == qp.billId.Split('_')[0].Trim()).SingleOrDefault();
+                
+                var qp = db._PaymentsQiwies.SingleOrDefault(x => x.billId == request.payment.billId && x.paymentIdqiwi == request.payment.paymentId);
+
+                //return new HttpStatusCodeResult(HttpStatusCode.OK, qp == null);
+
+                if (qp == null) return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "Нет такого платежа");
+
+                if (qp.Amount != decimal.Parse(request.payment.amount.value.Replace(".", ","), cultureinfo))
+                    return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "Сумма платежа не совпадает");
+
+                qp.Status = request.payment.status.value;
+                qp.DateModified = DateTime.Now;
+                db.SaveChanges();
+
+                //return new HttpStatusCodeResult(HttpStatusCode.OK);
+
+                var percent = 1.0 - double.Parse(ConfigurationManager.AppSettings.Get("percent").Replace(".", ","), cultureinfo) / 100;
+                var accountNumber = int.Parse(ConfigurationManager.AppSettings.Get("prihod"));
+
+                tbl_Dogovor dogovor = null;
+                using (var db1 = new MegatecDBDataContext(ConfigurationManager.ConnectionStrings["masterTour"].ToString()))
+                {
+                    dogovor = db1.tbl_Dogovors.Where(x => x.DG_CODE == qp.billId.Split('_')[0].Trim()).SingleOrDefault();
+                }
+
+                PaymentsQiwiResponse pqr = new PaymentsQiwiResponse
+                {
+                    Amount = decimal.Parse(request.payment.amount.value.Replace(".", ","), cultureinfo),
+                    billIdqiwi = request.payment.billId,
+                    paymentIdqiwi = request.payment.paymentId,
+                    date = DateTime.Now,
+                    response = JsonConvert.SerializeObject(request)
+                };
+                db._PaymentsQiwiResponses.Add(pqr);
+                db.SaveChanges();
+
+                qiwi.Models.Payment payment = new qiwi.Models.Payment
+                {
+                    Pm_DocumentNumber = pqr.billIdqiwi,
+                    Pm_CreateDate = DateTime.Now,
+                    Pm_Prkey = (int)dogovor.DG_PARTNERKEY,
+                    Pm_Poid = accountNumber,
+                    Pm_CreatorKey = 0,
+                    Pm_Date = DateTime.Now,
+                    Pm_FilialKey = 1,
+                    Pm_DepartmentKey = 0,
+                    Pm_Export = 0,
+                    Pm_Number = dogovor.DG_Key,
+                    Pm_Rakey = 2,
+                    Pm_Reason = string.Format("Оплата за туристическ. путевку {0}", dogovor.DG_CODE),
+                    Pm_RepresentName = dogovor.DG_MAINMEN ?? "",
+                    Pm_Sum = Convert.ToDecimal(Math.Round((double)pqr.Amount * percent, 2)),
+                    Pm_SumNational = Convert.ToDecimal(Math.Round((double)pqr.Amount * percent, 2)),
+                    Pm_Used = Convert.ToDecimal(Math.Round((double)pqr.Amount * percent, 2)),
+                    Pm_Vdata = pqr.paymentIdqiwi
+                };
+                db.Payments.Add(payment);
+                db.SaveChanges();
+
+                qp.paymentId = payment.Pm_Id;
+                db.SaveChanges();
+
+                qiwi.Models.PaymentDetail pd = new qiwi.Models.PaymentDetail
+                {
+                    Pd_Pmid = payment.Pm_Id,
+                    Pd_Course = 1,
+                    Pd_CreateDate = DateTime.Now,
+                    Pd_CreatorKey = 0,
+                    Pd_Date = DateTime.Now,
+                    Pd_Dgkey = dogovor.DG_Key,
+                    Pd_Percent = 0,
+                    Pd_Reason = string.Format("Оплата за туристическ. путевку {0}", dogovor.DG_CODE),
+                    Pd_Sum = pqr.Amount,
+                    Pd_SumNational = pqr.Amount,
+                    Pd_SumInDogovorRate = pqr.Amount
+                };
+                db.PaymentDetails.Add(pd);
+
+                qiwi.Models.PaymentDetail pd2 = new qiwi.Models.PaymentDetail
+                {
+                    Pd_Pmid = payment.Pm_Id,
+                    Pd_Course = 1,
+                    Pd_CreateDate = DateTime.Now,
+                    Pd_Date = DateTime.Now,
+                    Pd_CreatorKey = 0,
+                    Pd_Percent = 0,
+                    Pd_Sum = Convert.ToDecimal(Math.Round((double)pqr.Amount * (percent - 1), 2)),
+                    Pd_SumNational = Convert.ToDecimal(Math.Round((double)pqr.Amount * (percent - 1), 2)),
+                    Pd_SumInDogovorRate = Convert.ToDecimal(Math.Round((double)pqr.Amount * (percent - 1), 2))
+                };
+                db.PaymentDetails.Add(pd2);
+                db.SaveChanges();
+
+                return new HttpStatusCodeResult(HttpStatusCode.OK);
             }
-
-            PaymentsQiwiResponse pqr = new PaymentsQiwiResponse
-            {
-                Amount = decimal.Parse(request.payment.amount.value.Replace(".", ","), cultureinfo),
-                billIdqiwi = request.payment.billId,
-                paymentIdqiwi = request.payment.paymentId,
-                date = DateTime.Now,
-                response = JsonConvert.SerializeObject(request)
-            };
-            db._PaymentsQiwiResponses.Add(pqr);
-            db.SaveChanges();
-
-
-            qiwi.Models.Payment payment = new qiwi.Models.Payment
-            {
-                Pm_DocumentNumber = pqr.billIdqiwi,
-                Pm_CreateDate = DateTime.Now,
-                Pm_Prkey = (int)dogovor.DG_PARTNERKEY,
-                Pm_Poid = 178,
-                Pm_CreatorKey = 0,
-                Pm_Date = DateTime.Now,
-                Pm_FilialKey = 1,
-                Pm_DepartmentKey = 0,
-                Pm_Export = 0,
-                Pm_Number = dogovor.DG_Key,
-                Pm_Rakey = 2,
-                Pm_Reason = string.Format("Оплата за туристическ. путевку {0}", dogovor.DG_CODE),
-                Pm_RepresentName = dogovor.DG_MAINMEN ?? "",
-                Pm_Sum = Convert.ToDecimal(Math.Round((double)pqr.Amount * percent, 2)),
-                Pm_SumNational = Convert.ToDecimal(Math.Round((double)pqr.Amount * percent, 2)),
-                Pm_Used = Convert.ToDecimal(Math.Round((double)pqr.Amount * percent, 2)),
-                Pm_Vdata = pqr.paymentIdqiwi
-            };
-            db.Payments.Add(payment);
-            db.SaveChanges();
-
-            qiwi.Models.PaymentDetail pd = new qiwi.Models.PaymentDetail
-            {
-                Pd_Pmid = payment.Pm_Id,
-                Pd_Course = 1,
-                Pd_CreateDate = DateTime.Now,
-                Pd_CreatorKey = 0,
-                Pd_Date = DateTime.Now,
-                Pd_Dgkey = dogovor.DG_Key,
-                Pd_Percent = 0,
-                Pd_Reason = string.Format("Оплата за туристическ. путевку {0}", dogovor.DG_CODE),
-                Pd_Sum = pqr.Amount,
-                Pd_SumNational = pqr.Amount,
-                Pd_SumInDogovorRate = pqr.Amount
-            };
-            db.PaymentDetails.Add(pd);
-
-            qiwi.Models.PaymentDetail pd2 = new qiwi.Models.PaymentDetail
-            {
-                Pd_Pmid = payment.Pm_Id,
-                Pd_Course = 1,
-                Pd_CreateDate = DateTime.Now,
-                Pd_Date = DateTime.Now,
-                Pd_CreatorKey = 0,
-                Pd_Percent = 0,
-                Pd_Sum = -Convert.ToDecimal(Math.Round((double)pqr.Amount * percent, 2)),
-                Pd_SumNational = -Convert.ToDecimal(Math.Round((double)pqr.Amount * percent, 2)),
-                Pd_SumInDogovorRate = -Convert.ToDecimal(Math.Round((double)pqr.Amount * percent, 2))
-            };
-            db.PaymentDetails.Add(pd2);
-            db.SaveChanges();
-
-            return new HttpStatusCodeResult(HttpStatusCode.OK);
+            catch (Exception ex) { return new HttpStatusCodeResult(HttpStatusCode.BadRequest, ex.Message); }
         }
 
         protected override void Dispose(bool disposing)

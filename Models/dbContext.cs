@@ -34,8 +34,8 @@ namespace qiwi.Models
         {
             if (!optionsBuilder.IsConfigured)
             {
-                //optionsBuilder.UseSqlServer(ConfigurationManager.ConnectionStrings["masterTour"].ConnectionString);
-                optionsBuilder.UseSqlServer("Data Source=192.168.0.16;Initial Catalog=goshaTT;Integrated Security=False;User ID=sa;Password=23#swde23#;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;");
+                optionsBuilder.UseSqlServer(ConfigurationManager.ConnectionStrings["masterTour"].ConnectionString);
+                //optionsBuilder.UseSqlServer("Data Source=192.168.0.16;Initial Catalog=goshaTT;Integrated Security=False;User ID=sa;Password=23#swde23#;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;");
             }
         }
 

@@ -15,6 +15,7 @@ namespace qiwi.Models
         public string billId { get; set; }
         public string response { get; set; }
         public string paymentIdqiwi{ get; set; }
+        public int paymentId{ get; set; }
     }
 
     public class PaymentsQiwiResponse

@@ -510,6 +510,10 @@
     <Compile Include="Migrations\20200512110450_12052020-1404.designer.cs">
       <DependentUpon>20200512110450_12052020-1404.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\20200513110335_13052020-1403.cs" />
+    <Compile Include="Migrations\20200513110335_13052020-1403.designer.cs">
+      <DependentUpon>20200513110335_13052020-1403.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\dbContextModelSnapshot.cs" />
     <Compile Include="Models\dbContext.cs" />
     <Compile Include="Models\HotelPricing2.cs" />
@@ -542,6 +546,8 @@
     <Content Include="Scripts\jquery.validate.unobtrusive.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
+    <Content Include="Scripts\MyScripts\1.js" />
+    <Content Include="Scripts\MyScripts\2.js" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
