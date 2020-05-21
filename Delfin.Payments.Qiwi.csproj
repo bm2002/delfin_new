@@ -349,6 +349,7 @@
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Controllers\json2Controller.cs" />
     <Compile Include="Controllers\qiwiController.cs" />
     <Compile Include="Controllers\academserviceController.cs" />
     <Compile Include="Global.asax.cs">
@@ -515,8 +516,14 @@
       <DependentUpon>20200513110335_13052020-1403.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\dbContextModelSnapshot.cs" />
+    <Compile Include="Migrations\log\20200521145355_InitialCreate.cs" />
+    <Compile Include="Migrations\log\20200521145355_InitialCreate.designer.cs">
+      <DependentUpon>20200521145355_InitialCreate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\log\logContextModelSnapshot.cs" />
     <Compile Include="Models\dbContext.cs" />
     <Compile Include="Models\HotelPricing2.cs" />
+    <Compile Include="Models\logContext.cs" />
     <Compile Include="Models\PaymentDetails.cs" />
     <Compile Include="Models\Payments.cs" />
     <Compile Include="Models\PaymentsQiwi.cs" />
@@ -566,6 +573,7 @@
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Views\academservice\" />
+    <Folder Include="Views\json2\" />
     <Folder Include="Views\qiwi\" />
   </ItemGroup>
   <ItemGroup>
