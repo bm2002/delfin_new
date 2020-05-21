@@ -352,6 +352,7 @@
     <Compile Include="Controllers\json2Controller.cs" />
     <Compile Include="Controllers\qiwiController.cs" />
     <Compile Include="Controllers\academserviceController.cs" />
+    <Compile Include="Filters\logAttribute.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
