@@ -523,6 +523,7 @@
     </Compile>
     <Compile Include="Migrations\log\logContextModelSnapshot.cs" />
     <Compile Include="Models\dbContext.cs" />
+    <Compile Include="Models\getTables.cs" />
     <Compile Include="Models\HotelPricing2.cs" />
     <Compile Include="Models\logContext.cs" />
     <Compile Include="Models\PaymentDetails.cs" />
@@ -542,6 +543,7 @@
     <Content Include="Content\Site.css" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
+    <Content Include="libman.json" />
     <None Include="Properties\PublishProfiles\FolderProfile.pubxml" />
     <None Include="Scripts\jquery-3.4.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.4.1.js" />

@@ -20,10 +20,10 @@ namespace qiwi.Content
 
         CultureInfo cultureinfo = new CultureInfo("ru-RU");
 
-        [HttpPost]
+        [HttpGet]
         public string test()
         {
-            return "dsffdsdfs";
+            return "test";
         }
 
         [HttpGet]

@@ -15,8 +15,8 @@ namespace qiwi
 
             routes.MapRoute(
                 name: "Default",
-                url: "{controller}/{action}/{id}",
-                defaults: new { controller = "qiwi", action = "Index", id = UrlParameter.Optional }
+                url: "{controller}/subagents/{action}/{id}",
+                defaults: new { controller = "qiwi", action = "test", id = UrlParameter.Optional }
             );
         }
     }
