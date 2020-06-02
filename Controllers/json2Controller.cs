@@ -11,6 +11,12 @@ using qiwi.Filters;
 using qiwi.Models;
 using Delfin.Shared2.Data;
 using System.Web.Helpers;
+using System.Globalization;
+using Newtonsoft.Json.Linq;
+using System.Net;
+using System.Xml;
+using System.IO;
+using System.Text;
 
 //[Route("/json2/subagents")]
 namespace qiwi.Controllers
@@ -20,7 +26,8 @@ namespace qiwi.Controllers
     public class json2Controller : Controller
     {
         MTPricesDataContext db = new MTPricesDataContext(ConfigurationManager.ConnectionStrings["apiDatabase"].ToString());
-        
+
+        CultureInfo cultureinfo = new CultureInfo("ru-RU");
         public JsonResult Get_Dlf_Active_Tour()
         {
             var t = (from tt in db.TP_Tours
@@ -218,11 +225,170 @@ namespace qiwi.Controllers
             return content;
         }
 
-        public JsonResult empty()
+        public JsonResult HotelsQuotas(int Hotel, string SDate, string EDate)
         {
             JsonResult content = null;
 
+            Nullable<DateTime> d1 = null;
+            if (SDate != null) d1 = DateTime.Parse(SDate, cultureinfo);
+            Nullable<DateTime> d2 = null;
+            if (EDate != null) d2 = DateTime.Parse(EDate, cultureinfo);
+            int? hd = null;
+            if (Hotel != 0) hd = (int)Hotel;
 
+            var result = db._dlfHotelsQuotas(hd, d1, d2).ToList();
+
+            List<hotelquota> hotelquotes = new List<hotelquota>();
+            foreach (var item in result)
+            {
+                hotelquotes.Add(new hotelquota
+                {
+                    ByRoom = item.ByRoom,
+                    Duration = (int?)item.Duration,
+                    EndDate = ((DateTime)item.EndDate).ToString("dd.MM.yyyy"),
+                    Hotel = (int?)item.Hotel,
+                    Quota = item.Quota,
+                    ReleasePeriod = (int?)item.ReleasePeriod,
+                    Room = (int?)item.Room,
+                    RoomCat = (int?)item.RoomCat,
+                    StartDate = ((DateTime)item.StartDate).ToString("dd.MM.yyyy"),
+                });
+            }
+
+            content = Json(hotelquotes, JsonRequestBehavior.AllowGet);
+
+            content.MaxJsonLength = int.MaxValue;
+            return content;
+        }
+
+
+        public JsonResult HotelsStopSales(int Hotel, string SDate, string EDate)
+        {
+            JsonResult content = null;
+
+            cultureinfo = new CultureInfo("ru-ru");
+            Nullable<DateTime> d1 = null;
+            if (SDate != null) d1 = DateTime.Parse(SDate, cultureinfo);
+            Nullable<DateTime> d2 = null;
+            if (EDate != null) d2 = DateTime.Parse(EDate, cultureinfo);
+            int? hd = null;
+            if (Hotel != 0) hd = (int)Hotel;
+
+            var result = db._dlfHotelsStopSales(hd, d1, d2).ToList();
+
+            var hotstop = new List<hotelstop>();
+            foreach (var item in result)
+            {
+                hotstop.Add(new hotelstop
+                {
+                    Hotel = (int)item.Hotel,
+                    Room = (int)item.Room,
+                    RoomCat = (int)item.RoomCat,
+                    StartStop = ((DateTime)item.StartStop).ToString("dd.MM.yyyy"),
+                    EndStop = ((DateTime)item.EndStop).ToString("dd.MM.yyyy")
+                    //period = new Period((DateTime)item.StartStop, (DateTime)item.EndStop)
+                });
+            }
+
+            content = Json(hotstop, JsonRequestBehavior.AllowGet);
+
+            content.MaxJsonLength = int.MaxValue;
+            return content;
+        }
+
+        public JsonResult UserInfo(int US_KEY)
+        {
+            JsonResult content = null;
+            
+            var ui = (from ulist in db.DUP_USERs
+                      join prt in db.tbl_Partners on ulist.US_PRKEY equals prt.PR_KEY
+                      where ulist.US_KEY == US_KEY
+                      select new UserInfo
+                      {
+                          fullname = prt.PR_FULLNAME == null || prt.PR_FULLNAME == "" ? ulist.US_COMPANYNAME : prt.PR_FULLNAME,
+                          legaladress = prt.PR_LEGALADDRESS == null || prt.PR_LEGALADDRESS == "" ? prt.PR_ADRESS : prt.PR_LEGALADDRESS
+                      }).ToList();
+
+            content = Json(ui[0], JsonRequestBehavior.AllowGet);
+
+            content.MaxJsonLength = int.MaxValue;
+            return content;
+        }
+
+        public JsonResult AcademHotels(int area)
+        {
+            JsonResult content = null;
+
+            var query = (from ic in db.ImportedContents
+                         where ic.Descriptor == 12 && ic.Provider == 10 && ic.Reference == 1
+                         select ic.Content).ToList();
+
+            string jsontext = query[0].ToString();
+
+            var objects = JArray.Parse(jsontext);
+
+            List<AcademKurortCity> academKurortCities = new List<AcademKurortCity>();
+            foreach (var item in objects) academKurortCities.Add(JsonConvert.DeserializeObject<AcademKurortCity>(item.ToString()));
+
+            var hotels = new List<ExternHotelItem>();
+
+            foreach (var academKurortCity in academKurortCities)
+            {
+                if (academKurortCity.Item1 != area) continue;
+
+                int accity = academKurortCity.Item2;
+
+                string url = "https://www.acase.ru/xml/form.jsp";
+
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                request.ContentType = "application/x-www-form-urlencoded";
+                request.Method = "POST";
+                string postData = string.Format("CompanyId=DELFIN-CENTRE&UserId=XML&Password=83finled&CityCode={0}&RequestName=HotelListRequest&PagesForm=Yes&Language=ru", accity);
+                byte[] byteArray = Encoding.UTF8.GetBytes(postData);
+                request.ContentLength = byteArray.Length;
+                Stream dataStream = request.GetRequestStream();
+                dataStream.Write(byteArray, 0, byteArray.Length);
+                dataStream.Close();
+                WebResponse response = request.GetResponse();
+                dataStream = response.GetResponseStream();
+                XmlTextReader xmlreader = new XmlTextReader(dataStream);
+                xmlreader.WhitespaceHandling = WhitespaceHandling.None;
+
+                string hotelname = "";
+                Int32 id = 0;
+                while (xmlreader.Read())
+                {
+                    if (xmlreader.NodeType == XmlNodeType.Element && xmlreader.Name == "Hotel")
+                    {
+                        id = Convert.ToInt32(xmlreader.GetAttribute("Code"));
+                        hotelname = xmlreader.GetAttribute("Name") + " (" + xmlreader.GetAttribute("Address") + ")";
+                    }
+                    else if (xmlreader.NodeType == XmlNodeType.Element && xmlreader.Name == "FreeSale")
+                    {
+                        hotels.Add(new ExternHotelItem
+                        {
+                            HotelId = id,
+                            HotelName = hotelname,
+                            PPTAreaId = area,
+                            HasFreeSale = (xmlreader.GetAttribute("Code") == "1") ? true : false
+                        });
+                            //id, hotelname, area, (xmlreader.GetAttribute("Code") == "1") ? true : false);
+                    }
+
+                }
+                xmlreader.Close(); 
+            }
+
+            content = Json(hotels.ToArray(), JsonRequestBehavior.AllowGet);
+
+            content.MaxJsonLength = int.MaxValue;
+            return content;
+        }
+
+        public JsonResult empty()
+        {
+            JsonResult content = null;
+          
             //content = Json(, JsonRequestBehavior.AllowGet);
 
             content.MaxJsonLength = int.MaxValue;

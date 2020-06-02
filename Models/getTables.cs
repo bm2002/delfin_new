@@ -139,4 +139,50 @@ namespace qiwi.Models
         public int Id { get; set; }
         public string Name { get; set; }
     }
+
+    public class hotelquota
+    {
+        public int? Hotel { get; set; }
+        public int? Room { get; set; }
+        public int? RoomCat { get; set; }
+        public int? Quota { get; set; }
+        public string StartDate { get; set; }
+        public string EndDate { get; set; }
+        public int? ReleasePeriod { get; set; }
+        public bool ByRoom { get; set; }
+        public int? Duration { get; set; }
+    }
+
+    public class hotelstop
+    {
+        public int Hotel { get; set; }
+        public int Room { get; set; }
+        public int RoomCat { get; set; }
+        public string StartStop { get; set; }
+        public string EndStop { get; set; }
+        //public Period period { get; set; }
+    }
+
+    public class UserInfo
+    {
+        public string fullname { get; set; }
+        public string legaladress { get; set; }
+    }
+
+
+    public class ExternHotelItem
+    {
+        public int HotelId { get; set; }
+        public string HotelName { get; set; }
+        public int PPTAreaId { get; set; }
+        public bool HasFreeSale { get; set; }
+    }
+
+    public class AcademKurortCity
+    {
+        public int Item1 { get; set; }
+        public int Item2 { get; set; }
+        public int Item3 { get; set; }
+    }
+
 }
