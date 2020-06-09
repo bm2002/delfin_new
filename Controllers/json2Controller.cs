@@ -45,7 +45,7 @@ namespace qiwi.Controllers
 
         public JsonResult Get_Dlf_Tour_Hotel_HR_Pan()
         {
-            JsonResult content = null;
+            JsonResult content = null; 
 
             content = Json((from tpt in db.TP_Tours
                      join costs in db.tbl_Costs on tpt.TO_TRKey equals costs.CS_PKKEY
