@@ -185,4 +185,90 @@ namespace qiwi.Models
         public int Item3 { get; set; }
     }
 
+    public class Managerlogin
+    {
+
+        public class Rootobject
+        {
+            public string _case { get; set; }
+            public Field[] fields { get; set; }
+        }
+
+        public class Field
+        {
+            public int id { get; set; }
+            public string name { get; set; }
+            public string email { get; set; }
+            public string phone { get; set; }
+            public int legalEntity { get; set; }
+            public int attr { get; set; }
+        }
+    }
+
+    public class agencylogin
+    {
+
+        public class Rootobject
+        {
+            public string _case { get; set; }
+            public Field[] fields { get; set; }
+        }
+
+        public class Field
+        {
+            public int id { get; set; }
+            public string name { get; set; }
+            public bool isCoordinator { get; set; }
+            public bool isActive { get; set; }
+            public bool isSupervisor { get; set; }
+            public Agency agency { get; set; }
+        }
+
+        public class Agency
+        {
+            public int id { get; set; }
+            public string name { get; set; }
+            public int attr { get; set; }
+            public int city { get; set; }
+        }
+    }
+
+    public class dogGOI
+    {
+        public string error { get; set; }
+        public string DG_CODE { get; set; }
+        public string DG_MAINMENEMAIL { get; set; }
+        public string DG_TURDATE { get; set; }
+        public string DG_ENDDATE { get; set; }
+        public int DG_NMEN { get; set; }
+        public string DG_MAINMENPASPORT { get; set; }
+        public string DG_MAINMENPHONE { get; set; }
+        public int? DG_TRKEY { get; set; }
+        public int DG_CNKEY { get; set; }
+        public int DG_CTKEY { get; set; }
+        public string TU_NAMERUS { get; set; }
+        public string TU_FNAMERUS { get; set; }
+        public string TU_SNAMERUS { get; set; }
+        public string TU_NAMELAT { get; set; }
+        public string TU_FNAMELAT { get; set; }
+        public string TU_SNAMELAT { get; set; }
+        public int TU_SEX { get; set; }
+        public int TU_RealSex { get; set; }
+        public int TU_ISMAIN { get; set; }
+        public string TU_BIRTHDAY { get; set; }
+        public string TU_EMAIL { get; set; }
+        public string TU_PHONE { get; set; }
+        public string TU_PHONECODE { get; set; }
+        public string TU_PASPRUSER { get; set; }
+        public string TU_PASPRUNUM { get; set; }
+        public DateTime? TU_PASPRUDATE { get; set; }
+        public string TU_PASPORTNUM { get; set; }
+        public string TU_PASPORTTYPE { get; set; }
+        public DateTime? TU_PASPORTDATE { get; set; }
+        public DateTime? TU_PASPORTDATEEND { get; set; }
+        public int? PR_CTKEY { get; set; }
+        public string PR_CITY { get; set; }
+        public string PR_LEGALADDRESS { get; set; }
+        public int[] HDKEYS { get; set; }
+    }
 }

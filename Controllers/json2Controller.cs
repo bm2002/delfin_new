@@ -17,15 +17,17 @@ using System.Net;
 using System.Xml;
 using System.IO;
 using System.Text;
+using Delfin.Data;
 
 //[Route("/json2/subagents")]
 namespace qiwi.Controllers
 {
     
     [log]
-    public class json2Controller : Controller
+    public class SubagentsController : Controller
     {
         MTPricesDataContext db = new MTPricesDataContext(ConfigurationManager.ConnectionStrings["apiDatabase"].ToString());
+        MegatecDBDataContext db2 = new MegatecDBDataContext(ConfigurationManager.ConnectionStrings["masterTour"].ToString());
 
         CultureInfo cultureinfo = new CultureInfo("ru-RU");
         public JsonResult Get_Dlf_Active_Tour()
@@ -365,7 +367,7 @@ namespace qiwi.Controllers
                     }
                     else if (xmlreader.NodeType == XmlNodeType.Element && xmlreader.Name == "FreeSale")
                     {
-                        hotels.Add(new ExternHotelItem
+                        hotels.Add(new ExternHotelItem 
                         {
                             HotelId = id,
                             HotelName = hotelname,
@@ -380,6 +382,111 @@ namespace qiwi.Controllers
             }
 
             content = Json(hotels.ToArray(), JsonRequestBehavior.AllowGet);
+
+            content.MaxJsonLength = int.MaxValue;
+            return content;
+        }
+
+        public JsonResult GetOrderInfo(string auth_token, string email, string order)
+        {
+            JsonResult content = null;
+
+            bool agency = (auth_token ?? "") != "";
+
+            int partnerkey = 0;
+            string operatr = "";
+            int opr = 0;
+
+            if (agency)
+            {
+                try
+                {
+                    string postdata = JsonConvert.SerializeObject(new Guid(auth_token));
+                    string text = lib.getPost("https://www.delfin-tour.ru/auth/byToken", postdata);
+                    if (text.Contains("AgencyManager")) partnerkey = (JsonConvert.DeserializeObject<agencylogin.Rootobject>(text)).fields[0].agency.id;
+                    if (text.Contains("Operator"))
+                    {
+                        partnerkey = (JsonConvert.DeserializeObject<Managerlogin.Rootobject>(text)).fields[0].legalEntity;
+                        opr = (JsonConvert.DeserializeObject<Managerlogin.Rootobject>(text)).fields[0].id;
+                        operatr = (JsonConvert.DeserializeObject<Managerlogin.Rootobject>(text)).fields[0].name;
+                    }
+                }
+                catch { }
+            }
+
+            List<dogGOI> doggoi = new List<dogGOI>();
+            if (partnerkey == 0 && auth_token != "")
+            {
+                doggoi.Add(new dogGOI
+                {
+                    error = "token not valid"
+                });
+            }
+            else
+            {
+                var dgs = new List<tbl_Dogovor>();
+                if (agency)
+                {
+                    dgs = db2.tbl_Dogovors.Where(x => x.DG_CODE == order).ToList();
+                    if (operatr == "") dgs = dgs.Where(x => x.DG_PARTNERKEY == partnerkey).ToList();
+                }
+                else
+                    dgs = db2.tbl_Dogovors.Where(x => x.DG_CODE == order && x.DG_MAINMENEMAIL == email).ToList();
+
+                foreach (var dg in dgs)
+                {
+                    var trsts = db2.tbl_Turists.Where(x => x.TU_DGCOD == dg.DG_CODE).ToList();
+
+                    var prts = db2.tbl_Partners.Where(X => X.PR_KEY == dg.DG_PARTNERKEY).SingleOrDefault();
+
+                    var dupusers = db2.DUP_USERs.Where(x => x.US_KEY == dg.DG_DUPUSERKEY).ToList();
+
+                    var hdkeys = db2.tbl_DogovorLists.Where(x => x.DL_DGCOD == order && x.DL_SVKEY == 3).Select(x => x.DL_CODE).Distinct().ToArray();
+
+                    foreach (var trst in trsts)
+                    {
+                        doggoi.Add(new dogGOI 
+                        {
+                            DG_ENDDATE = dg.DG_TURDATE.AddDays(dg.DG_NDAY - 1).ToString("dd.MM.yyyy", cultureinfo),
+                            DG_CNKEY = dg.DG_CNKEY,
+                            DG_TURDATE = dg.DG_TURDATE.ToString("dd.MM.yyyy", cultureinfo),
+                            DG_CODE = dg.DG_CODE,
+                            DG_CTKEY = dg.DG_CTKEY,
+                            DG_MAINMENEMAIL = dupusers.Count() == 0 ? dg.DG_MAINMENEMAIL : dupusers[0].US_EMAIL,
+                            DG_MAINMENPASPORT = dg.DG_MAINMENPASPORT,
+                            DG_MAINMENPHONE = dg.DG_MAINMENPHONE,
+                            DG_NMEN = (int)dg.DG_NMEN,
+                            DG_TRKEY = dg.DG_TRKEY,
+                            PR_CITY = prts.PR_CITY,
+                            PR_CTKEY = prts.PR_CTKEY,
+                            PR_LEGALADDRESS = prts.PR_LEGALADDRESS,
+                            TU_BIRTHDAY = trst.TU_BIRTHDAY != null ? ((DateTime)trst.TU_BIRTHDAY).ToString("dd.MM.yyyy") : "",
+                            TU_EMAIL = trst.TU_EMAIL,
+                            TU_FNAMELAT = trst.TU_FNAMELAT,
+                            TU_FNAMERUS = trst.TU_FNAMERUS,
+                            TU_ISMAIN = (int)(trst.TU_ISMAIN ?? 0),
+                            TU_NAMELAT = trst.TU_NAMELAT,
+                            TU_NAMERUS = trst.TU_NAMERUS,
+                            TU_PASPORTDATE = trst.TU_PASPORTDATE,
+                            TU_PASPORTDATEEND = trst.TU_PASPORTDATEEND,
+                            TU_PASPORTNUM = trst.TU_PASPORTNUM,
+                            TU_PASPORTTYPE = trst.TU_PASPORTTYPE,
+                            TU_PASPRUDATE = trst.TU_PASPRUDATE,
+                            TU_PASPRUNUM = trst.TU_PASPRUNUM,
+                            TU_PASPRUSER = trst.TU_PASPRUSER,
+                            TU_PHONE = trst.TU_PHONE,
+                            TU_PHONECODE = trst.TU_PHONECODE,
+                            TU_RealSex = (int)(trst.TU_RealSex ?? 0),
+                            TU_SEX = (int)(trst.TU_SEX ?? 0),
+                            TU_SNAMELAT = trst.TU_SNAMELAT,
+                            TU_SNAMERUS = trst.TU_SNAMERUS,
+                            HDKEYS = hdkeys
+                        });
+                    }
+                }          
+            }
+
+            content = Json(doggoi, JsonRequestBehavior.AllowGet);
 
             content.MaxJsonLength = int.MaxValue;
             return content;
@@ -569,7 +676,7 @@ namespace qiwi.Controllers
         protected override void Dispose(bool disposing)
         {
             db.Dispose();
-            //db2.Dispose();
+            db2.Dispose();
             base.Dispose(disposing);
         }
 
