@@ -271,4 +271,41 @@ namespace qiwi.Models
         public string PR_LEGALADDRESS { get; set; }
         public int[] HDKEYS { get; set; }
     }
+
+    public class tourhotelrequest
+    {
+        public int T { get; set; }
+        public int H { get; set; }
+    }
+
+    public class Tours
+    {
+        public int? Tour { get; set; }
+        public int? Hotel { get; set; }
+        public int? Min01 { get; set; }
+        public int? Min02 { get; set; }
+        public int? Min03 { get; set; }
+        public int? Min04 { get; set; }
+        public int? Min05 { get; set; }
+        public int? Min06 { get; set; }
+        public int? Min07 { get; set; }
+        public int? Min08 { get; set; }
+        public int? Min09 { get; set; }
+        public int? Min10 { get; set; }
+        public int? Min11 { get; set; }
+        public int? Min12 { get; set; }
+        public int? Max01 { get; set; }
+        public int? Max02 { get; set; }
+        public int? Max03 { get; set; }
+        public int? Max04 { get; set; }
+        public int? Max05 { get; set; }
+        public int? Max06 { get; set; }
+        public int? Max07 { get; set; }
+        public int? Max08 { get; set; }
+        public int? Max09 { get; set; }
+        public int? Max10 { get; set; }
+        public int? Max11 { get; set; }
+        public int? Max12 { get; set; }
+        public int? TI_hdnights { get; set; }
+    }
 }

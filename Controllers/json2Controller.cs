@@ -492,6 +492,100 @@ namespace qiwi.Controllers
             return content;
         }
 
+        [HttpPost]
+        public JsonResult testPost1(int i)
+        {
+            return Json(i * i);
+        }
+
+        [HttpPost]
+        public JsonResult searchMinMaxPrice(tourhotelrequest[] req)
+        {
+            JsonResult content = null;
+
+            List<Tours> tours = new List<Tours>();
+
+            if (req == null) req = new tourhotelrequest[0];
+
+            if (req.Length == 0 || req == null)
+            {
+                tours = (from tptours in db.dlf_TP_Tours
+                         select new Tours
+                         {
+                             Tour = (tptours.TO_TRKey != null) ? (int)tptours.TO_TRKey : 0,
+                             Hotel = (tptours.HD_KEY != null) ? (int)tptours.HD_KEY : 0,
+                             Min01 = (tptours.MIN_01 != null) ? (int)tptours.MIN_01 : 0,
+                             Min02 = (tptours.MIN_02 != null) ? (int)tptours.MIN_02 : 0,
+                             Min03 = (tptours.MIN_03 != null) ? (int)tptours.MIN_03 : 0,
+                             Min04 = (tptours.MIN_04 != null) ? (int)tptours.MIN_04 : 0,
+                             Min05 = (tptours.MIN_05 != null) ? (int)tptours.MIN_05 : 0,
+                             Min06 = (tptours.MIN_06 != null) ? (int)tptours.MIN_06 : 0,
+                             Min07 = (tptours.MIN_07 != null) ? (int)tptours.MIN_07 : 0,
+                             Min08 = (tptours.MIN_08 != null) ? (int)tptours.MIN_08 : 0,
+                             Min09 = (tptours.MIN_09 != null) ? (int)tptours.MIN_09 : 0,
+                             Min10 = (tptours.MIN_10 != null) ? (int)tptours.MIN_10 : 0,
+                             Min11 = (tptours.MIN_11 != null) ? (int)tptours.MIN_11 : 0,
+                             Min12 = (tptours.MIN_12 != null) ? (int)tptours.MIN_12 : 0,
+                             Max01 = (tptours.MAX_01 != null) ? (int)tptours.MAX_01 : 0,
+                             Max02 = (tptours.MAX_02 != null) ? (int)tptours.MAX_02 : 0,
+                             Max03 = (tptours.MAX_03 != null) ? (int)tptours.MAX_03 : 0,
+                             Max04 = (tptours.MAX_04 != null) ? (int)tptours.MAX_04 : 0,
+                             Max05 = (tptours.MAX_05 != null) ? (int)tptours.MAX_05 : 0,
+                             Max06 = (tptours.MAX_06 != null) ? (int)tptours.MAX_06 : 0,
+                             Max07 = (tptours.MAX_07 != null) ? (int)tptours.MAX_07 : 0,
+                             Max08 = (tptours.MAX_08 != null) ? (int)tptours.MAX_08 : 0,
+                             Max09 = (tptours.MAX_09 != null) ? (int)tptours.MAX_09 : 0,
+                             Max10 = (tptours.MAX_10 != null) ? (int)tptours.MAX_10 : 0,
+                             Max11 = (tptours.MAX_11 != null) ? (int)tptours.MAX_11 : 0,
+                             Max12 = (tptours.MAX_12 != null) ? (int)tptours.MAX_12 : 0,
+                             TI_hdnights = (tptours.TI_hdnights != null) ? (int)tptours.TI_hdnights : 0
+                         }).ToList();
+            }
+            else
+            {
+                foreach (var rq in req)
+                {
+                    tours.Add((from tptours in db.dlf_TP_Tours
+                               where tptours.TO_TRKey == rq.T && tptours.HD_KEY == rq.H
+                               select new Tours
+                               {
+                                   Tour = (int)tptours.TO_TRKey,
+                                   Hotel = (int)tptours.HD_KEY,
+                                   Min01 = (tptours.MIN_01 != null) ? (int)tptours.MIN_01 : 0,
+                                   Min02 = (tptours.MIN_02 != null) ? (int)tptours.MIN_02 : 0,
+                                   Min03 = (tptours.MIN_03 != null) ? (int)tptours.MIN_03 : 0,
+                                   Min04 = (tptours.MIN_04 != null) ? (int)tptours.MIN_04 : 0,
+                                   Min05 = (tptours.MIN_05 != null) ? (int)tptours.MIN_05 : 0,
+                                   Min06 = (tptours.MIN_06 != null) ? (int)tptours.MIN_06 : 0,
+                                   Min07 = (tptours.MIN_07 != null) ? (int)tptours.MIN_07 : 0,
+                                   Min08 = (tptours.MIN_08 != null) ? (int)tptours.MIN_08 : 0,
+                                   Min09 = (tptours.MIN_09 != null) ? (int)tptours.MIN_09 : 0,
+                                   Min10 = (tptours.MIN_10 != null) ? (int)tptours.MIN_10 : 0,
+                                   Min11 = (tptours.MIN_11 != null) ? (int)tptours.MIN_11 : 0,
+                                   Min12 = (tptours.MIN_12 != null) ? (int)tptours.MIN_12 : 0,
+                                   Max01 = (tptours.MAX_01 != null) ? (int)tptours.MAX_01 : 0,
+                                   Max02 = (tptours.MAX_02 != null) ? (int)tptours.MAX_02 : 0,
+                                   Max03 = (tptours.MAX_03 != null) ? (int)tptours.MAX_03 : 0,
+                                   Max04 = (tptours.MAX_04 != null) ? (int)tptours.MAX_04 : 0,
+                                   Max05 = (tptours.MAX_05 != null) ? (int)tptours.MAX_05 : 0,
+                                   Max06 = (tptours.MAX_06 != null) ? (int)tptours.MAX_06 : 0,
+                                   Max07 = (tptours.MAX_07 != null) ? (int)tptours.MAX_07 : 0,
+                                   Max08 = (tptours.MAX_08 != null) ? (int)tptours.MAX_08 : 0,
+                                   Max09 = (tptours.MAX_09 != null) ? (int)tptours.MAX_09 : 0,
+                                   Max10 = (tptours.MAX_10 != null) ? (int)tptours.MAX_10 : 0,
+                                   Max11 = (tptours.MAX_11 != null) ? (int)tptours.MAX_11 : 0,
+                                   Max12 = (tptours.MAX_12 != null) ? (int)tptours.MAX_12 : 0,
+                                   TI_hdnights = (tptours.TI_hdnights != null) ? (int)tptours.TI_hdnights : 0
+                               }).SingleOrDefault());
+                }
+            }
+
+            content = Json(tours, JsonRequestBehavior.AllowGet);
+
+            content.MaxJsonLength = int.MaxValue;
+            return content;
+        }
+
         public JsonResult empty()
         {
             JsonResult content = null;
@@ -666,12 +760,15 @@ namespace qiwi.Controllers
             return content;
         }
 
-        [HttpPost]
-        public JsonResult testPost(testrequest req)
+        [HttpGet]
+        public string test()
         {
-            //var json = JsonConvert.SerializeObject(req);
-            return Json(req.x * req.y, JsonRequestBehavior.AllowGet);
+            var req = JsonConvert.SerializeObject(new tourhotelrequest[]
+                {new tourhotelrequest {T = 1, H = 2 } });
+            return "test";
         }
+
+        
 
         protected override void Dispose(bool disposing)
         {
