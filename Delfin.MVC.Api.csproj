@@ -549,6 +549,7 @@
     <Compile Include="Models\HotelPricing2.cs" />
     <Compile Include="Models\logContext.cs" />
     <Compile Include="Models\orderInfoRequest.cs" />
+    <Compile Include="Models\orderInfoResponse.cs" />
     <Compile Include="Models\PaymentDetails.cs" />
     <Compile Include="Models\Payments.cs" />
     <Compile Include="Models\PaymentsQiwi.cs" />

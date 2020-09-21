@@ -13,12 +13,14 @@ using Delfin.Shared2.Data;
 using System.Web.Helpers;
 using System.Globalization;
 using Newtonsoft.Json.Linq;
+using System.Data.Linq;
 using System.Net;
 using System.Xml;
 using System.IO;
 using System.Text;
 using Delfin.Data;
 using delfin.mvc.api.Models;
+using static delfin.mvc.api.Models.orderInfoResponse;
 
 //[Route("/json2/subagents")]
 namespace qiwi.Controllers
@@ -152,11 +154,11 @@ namespace qiwi.Controllers
             Parts parts = new Parts();
             parts.Case = programs.Select(x => (int)(x.WeekdayNumber ?? 0)).Sum() == 0 ? "ByRotation" : "ByWeekday";
 
-            List<Field> fields = new List<Field>();
+            List<qiwi.Models.Field> fields = new List<qiwi.Models.Field>();
 
             foreach (var program in programs.OrderBy(x => x.Idx))
             {
-                fields.Add(new Field
+                fields.Add(new qiwi.Models.Field
                 {
                     DayOfWeek = (int)(program.WeekdayNumber ?? 0),
                     Info = new Info
@@ -169,7 +171,7 @@ namespace qiwi.Controllers
                 });
             }
 
-            parts.Fields = new Field[][] { fields.ToArray() };
+            parts.Fields = new qiwi.Models.Field[][] { fields.ToArray() };
 
             var attr = (from ta in db._TourBitAttrs
                         join ba in db._BitAttrs on ta.ID_BitAttr equals ba.ID_BitAttr
@@ -784,15 +786,91 @@ namespace qiwi.Controllers
             return "test";
         }
 
-        [HttpGet]
-        public JsonResult OrdersInfo() 
+        //[HttpGet]
+        //public JsonResult OrdersInfo()
+        [HttpPost]
+        public JsonResult OrdersInfo(orderInfoRequest request)
         {
-            string jsonData = System.IO.File.ReadAllText(@"C:\json\OrdersInfo.json");
-            var request = JsonConvert.DeserializeObject<orderInfoRequest>(jsonData);
+            //string jsonData = System.IO.File.ReadAllText(@"C:\json\OrdersInfo.json");
+            //var request = JsonConvert.DeserializeObject<orderInfoRequest>(jsonData);
 
-            
+            var db = new MegatecDBDataContext(ConfigurationManager.ConnectionStrings["masterTour"].ConnectionString);
 
-            var content = Json(request.Code, JsonRequestBehavior.AllowGet);
+            var dogovor = db.tbl_Dogovors.SingleOrDefault(x => x.DG_CODE == request.Code);
+            var dogovorlists = db.tbl_DogovorLists.Where(x => x.DL_DGCOD == request.Code).ToList();
+            var dogovorlistshotel = dogovorlists.Where(x => x.DL_SVKEY == 3 ).FirstOrDefault();
+            var turists = db.tbl_Turists.Where(x => x.TU_DGCOD == request.Code).ToList();
+            var hotelroom = db.HotelRooms.Where(x => x.HR_KEY == dogovorlistshotel.DL_SUBCODE1).SingleOrDefault();
+            var response = new onedog
+            {
+                Code = request.Code,
+                CreateDate = dogovor.DG_CRDATE.ToString("dd.MM.yyyy HH:mm:ss"),
+                State = db.Order_Status.SingleOrDefault(x => x.OS_CODE == dogovor.DG_SOR_CODE).OS_NAME_RUS,
+                Cost = new Cost
+                {
+                    Brutto = dogovor.DG_PRICE,
+                    Netto = 0,
+                    Fee = dogovor.DG_DISCOUNTSUM
+                },
+                Fee = new Fee
+                {
+                    Fields = new decimal[] { (decimal)dogovor.DG_DISCOUNT },
+                    Case = "Percent"
+                },
+                Request = new delfin.mvc.api.Models.orderInfoResponse.Request
+                {
+                    Guests = turists.Select(x => new Guest
+                    {
+                        Birthday = x.TU_BIRTHDAY != null ? ((DateTime)x.TU_BIRTHDAY).ToString("dd.MM.yyyy") : "",
+                        Citizenship = x.TU_CITIZEN,
+                        DocumentNumber = x.TU_PASPRUNUM,
+                        DocumentSerial = x.TU_PASPRUSER,
+                        Id = x.TU_KEY,
+                        Phone = x.TU_PHONE,
+                        IsMale = (x.TU_SEX ?? 0) == 0,
+                        Cyrilic = new Cyrilic
+                        {
+                            Name = x.TU_FNAMERUS,
+                            Patronymic = x.TU_SNAMERUS,
+                            SurName = x.TU_NAMERUS
+                        },
+                        Latin = new Latin
+                        {
+                            Name = x.TU_FNAMELAT,
+                            Patronymic = x.TU_SNAMELAT,
+                            SurName = x.TU_NAMELAT
+                        }
+                    }).ToArray(),
+                    PriceKey = new Pricekey
+                    {
+                        Hotel = dogovorlistshotel.DL_CODE,
+                        Date = dogovorlistshotel.DL_DATEBEG != null ? ((DateTime)dogovorlistshotel.DL_DATEBEG).ToString("dd.MM.yyyy") : "",
+                        Nights = (short)dogovorlistshotel.DL_NDAYS,
+                        Pansion = (int)dogovorlistshotel.DL_SUBCODE2,
+                        Tour = dogovorlistshotel.DL_TRKEY,
+                        Room = hotelroom.HR_RMKEY,
+                        RoomCat = hotelroom.HR_RCKEY
+                    }
+                },
+                Services = dogovorlists.Select(x =>
+                new orderInfoResponse.Service
+                {
+                    Brutto = (decimal)x.DL_BRUTTO,
+                    Fee = x.DL_KEY == dogovorlistshotel.DL_KEY ? dogovor.DG_DISCOUNTSUM : 0,
+                    Duration = (short)x.DL_NDAYS,
+                    Name = dogovor.DG_CODE.Contains("TPL") ? x.DL_NAME.Replace("HOTEL::", "Круиз ") :
+                        dogovor.DG_CODE.Contains("AVI") ? x.DL_NAME.Replace("А_П::", "Авиаперелет ") :
+                        dogovor.DG_CODE.Contains("INT") ? x.DL_NAME.Replace("Проживание::Академсервис/", "Проживание ") :
+                        x.DL_NAME,
+                    Persons = x.DL_NMEN,
+                    StartDate = x.DL_DATEBEG != null ? ((DateTime)x.DL_DATEBEG).ToString("dd.MM.yyyy") : "",
+
+                }).ToArray()
+            };
+
+            db.Dispose();
+
+            var content = Json(response, JsonRequestBehavior.AllowGet);
             content.MaxJsonLength = int.MaxValue;
             return content;
         }
