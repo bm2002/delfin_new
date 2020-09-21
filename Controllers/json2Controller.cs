@@ -18,6 +18,7 @@ using System.Xml;
 using System.IO;
 using System.Text;
 using Delfin.Data;
+using delfin.mvc.api.Models;
 
 //[Route("/json2/subagents")]
 namespace qiwi.Controllers
@@ -54,7 +55,7 @@ namespace qiwi.Controllers
                      select new gdthPan { master_hotel_id = costs.CS_CODE, master_tour_id = tpt.TO_TRKey, master_pansion_id = (int)costs.CS_SUBCODE2, master_room_category_id = hr.HR_RCKEY, master_room_id = hr.HR_RMKEY }).Distinct().ToList(), JsonRequestBehavior.AllowGet);
             content.MaxJsonLength = int.MaxValue; 
             return content;
-        }
+        } 
 
         public JsonResult Rooms()
         {
@@ -503,7 +504,7 @@ namespace qiwi.Controllers
         {
             JsonResult content = null;
 
-            List<Tours> tours = new List<Tours>();
+            List<Tours> tours = new List<Tours>(); 
 
             if (req == null) req = new tourhotelrequest[0];
 
@@ -581,6 +582,21 @@ namespace qiwi.Controllers
             }
 
             content = Json(tours, JsonRequestBehavior.AllowGet);
+
+            content.MaxJsonLength = int.MaxValue;
+            return content;
+        }
+
+        public JsonResult Areas(int Country = 0, int Region = 0, int City = 0)
+        {
+            JsonResult content = null;
+
+            var data = db.ppt_areas.ToList();
+            if (Country != 0) data = data.Where(x => x.countryId == Country).ToList();
+            if (Region != 0) data = data.Where(x => x.regionId == Region).ToList();
+            if (City != 0) data = data.Where(x => x.cityId == City).ToList();
+
+            content = Json(data, JsonRequestBehavior.AllowGet);
 
             content.MaxJsonLength = int.MaxValue;
             return content;
@@ -768,7 +784,18 @@ namespace qiwi.Controllers
             return "test";
         }
 
-        
+        [HttpGet]
+        public JsonResult OrdersInfo() 
+        {
+            string jsonData = System.IO.File.ReadAllText(@"C:\json\OrdersInfo.json");
+            var request = JsonConvert.DeserializeObject<orderInfoRequest>(jsonData);
+
+            
+
+            var content = Json(request.Code, JsonRequestBehavior.AllowGet);
+            content.MaxJsonLength = int.MaxValue;
+            return content;
+        }
 
         protected override void Dispose(bool disposing)
         {

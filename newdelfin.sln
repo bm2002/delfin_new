@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Delfin.MVC.Api", "Delfin.MVC.Api.csproj", "{38F044FD-1B04-4BBD-BFB6-7892628E9C00}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "delfin.api.net.core", "..\api.net.core\delfin.api.net.core.csproj", "{13E833A7-688E-4FBC-9737-58ADF687BDAC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{38F044FD-1B04-4BBD-BFB6-7892628E9C00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{38F044FD-1B04-4BBD-BFB6-7892628E9C00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{38F044FD-1B04-4BBD-BFB6-7892628E9C00}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{38F044FD-1B04-4BBD-BFB6-7892628E9C00}.Debug|x86.Build.0 = Debug|Any CPU
+		{38F044FD-1B04-4BBD-BFB6-7892628E9C00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{38F044FD-1B04-4BBD-BFB6-7892628E9C00}.Release|Any CPU.Build.0 = Release|Any CPU
+		{38F044FD-1B04-4BBD-BFB6-7892628E9C00}.Release|x86.ActiveCfg = Release|Any CPU
+		{38F044FD-1B04-4BBD-BFB6-7892628E9C00}.Release|x86.Build.0 = Release|Any CPU
+		{13E833A7-688E-4FBC-9737-58ADF687BDAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13E833A7-688E-4FBC-9737-58ADF687BDAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13E833A7-688E-4FBC-9737-58ADF687BDAC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{13E833A7-688E-4FBC-9737-58ADF687BDAC}.Debug|x86.Build.0 = Debug|Any CPU
+		{13E833A7-688E-4FBC-9737-58ADF687BDAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13E833A7-688E-4FBC-9737-58ADF687BDAC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13E833A7-688E-4FBC-9737-58ADF687BDAC}.Release|x86.ActiveCfg = Release|Any CPU
+		{13E833A7-688E-4FBC-9737-58ADF687BDAC}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {310D6A30-3B60-45D7-A726-EEE36CB3C892}
+	EndGlobalSection
+EndGlobal

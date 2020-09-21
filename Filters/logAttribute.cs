@@ -26,7 +26,7 @@ namespace qiwi.Filters
             if (filterContext.Exception == null)            
                 log.RequestDumps2.Add(new RequestDump2
                 {
-                    ProviderId = filterContext.ActionDescriptor.ControllerDescriptor.ControllerName == "json2" ? 201 :
+                    ProviderId = filterContext.ActionDescriptor.ControllerDescriptor.ControllerName == "Subagents" ? 201 :
                                             filterContext.ActionDescriptor.ControllerDescriptor.ControllerName == "qiwi" ? 202 : 0,
                     Url = request.Url.AbsoluteUri,
                     Success = true,
@@ -42,7 +42,7 @@ namespace qiwi.Filters
             {
                 log.RequestDumps2.Add(new RequestDump2
                 {
-                    ProviderId = filterContext.ActionDescriptor.ControllerDescriptor.ControllerName == "json2" ? 201 :
+                    ProviderId = filterContext.ActionDescriptor.ControllerDescriptor.ControllerName == "Subagents" ? 201 :
                                             filterContext.ActionDescriptor.ControllerDescriptor.ControllerName == "qiwi" ? 202 : 0,
                     Url = request.Url.AbsoluteUri,
                     Success = false,
