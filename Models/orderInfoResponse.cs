@@ -29,9 +29,11 @@ namespace delfin.mvc.api.Models
 
         public class Cost
         {
-            public decimal Netto { get; set; }
+            public decimal Netto { get; set; } 
             public decimal Brutto { get; set; }
             public decimal Fee { get; set; }
+            public string Rate { get; set; }
+
         }
 
         public class Fee
@@ -60,6 +62,7 @@ namespace delfin.mvc.api.Models
         {
             public int Hotel { get; set; }
             public int Tour { get; set; }
+
             public int Pansion { get; set; }
             public int Room { get; set; }
             public int RoomCat { get; set; }
@@ -125,9 +128,9 @@ namespace delfin.mvc.api.Models
             public string Name { get; set; }
             public string StartDate { get; set; }
             public int Persons { get; set; }
-            public short Duration { get; set; }
-            public decimal Brutto { get; set; }
-            public decimal Fee { get; set; }
+            public short? Duration { get; set; }
+            public decimal? Brutto { get; set; }
+            public decimal? Fee { get; set; }
             public bool IsInvisible { get; set; }
             public bool IsDeletable { get; set; }
         }

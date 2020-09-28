@@ -9,6 +9,15 @@ namespace delfin.mvc.api.Models
     {
         public Access Access { get; set; }
         public string Code { get; set; }
+        public string TouristNameLike{ get; set; }
+        public CreatePeriod CreatePeriod { get; set; }
+    }
+
+    public class CreatePeriod
+    {
+        public string Start { get; set; }
+        public string Stop { get; set; }
+
     }
 
     public class Access

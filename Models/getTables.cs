@@ -62,8 +62,10 @@ namespace qiwi.Models
     public class hotelcontent2
     {
         public string Name { get; set; }
+        public string NameAdd { get; set; }
         public int Id { get; set; }
         public int Stars { get; set; }
+        public int Stars_www { get; set; }
         public string Type { get; set; }
         public string Contacts { get; set; }
         public string Adress { get; set; }

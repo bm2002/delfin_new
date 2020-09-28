@@ -105,8 +105,10 @@ namespace qiwi.Controllers
             var apiHotelDescription = new hotelcontent2
             {
                 Name = ppt_HotelContent.Title,
+                NameAdd = db.HotelDictionaries.SingleOrDefault(x => x.HD_KEY == id).HD_NAME.Replace("\"", ""),
                 Id = ppt_Hotel.HotelId,
                 Stars = ppt_HotelContent.Level,
+                Stars_www = ppt_HotelContent.Stars ?? 0,
                 Type = ppt_HotelType != null ? ppt_HotelType.Title : "",
                 Contacts = "",
                 Adress = ppt_HotelContent.Address_full,
@@ -779,11 +781,11 @@ namespace qiwi.Controllers
         }
 
         [HttpGet]
-        public string test()
+        public JsonResult test()
         {
-            var req = JsonConvert.SerializeObject(new tourhotelrequest[]
-                {new tourhotelrequest {T = 1, H = 2 } });
-            return "test";
+            //var req = JsonConvert.SerializeObject(new tourhotelrequest[]
+            //    {new tourhotelrequest {T = 1, H = 2 } });
+            return Json("test", JsonRequestBehavior.AllowGet);
         }
 
         //[HttpGet]
@@ -791,86 +793,134 @@ namespace qiwi.Controllers
         [HttpPost]
         public JsonResult OrdersInfo(orderInfoRequest request)
         {
-            //string jsonData = System.IO.File.ReadAllText(@"C:\json\OrdersInfo.json");
+            //string jsonData = System.IO.File.ReadAllText(@"C:\json\OrdersInfo.json", Encoding.GetEncoding(1251));
             //var request = JsonConvert.DeserializeObject<orderInfoRequest>(jsonData);
 
-            var db = new MegatecDBDataContext(ConfigurationManager.ConnectionStrings["masterTour"].ConnectionString);
+            //var db = new MegatecDBDataContext(ConfigurationManager.ConnectionStrings["masterTour"].ConnectionString);
 
-            var dogovor = db.tbl_Dogovors.SingleOrDefault(x => x.DG_CODE == request.Code);
-            var dogovorlists = db.tbl_DogovorLists.Where(x => x.DL_DGCOD == request.Code).ToList();
-            var dogovorlistshotel = dogovorlists.Where(x => x.DL_SVKEY == 3 ).FirstOrDefault();
-            var turists = db.tbl_Turists.Where(x => x.TU_DGCOD == request.Code).ToList();
-            var hotelroom = db.HotelRooms.Where(x => x.HR_KEY == dogovorlistshotel.DL_SUBCODE1).SingleOrDefault();
-            var response = new onedog
-            {
-                Code = request.Code,
-                CreateDate = dogovor.DG_CRDATE.ToString("dd.MM.yyyy HH:mm:ss"),
-                State = db.Order_Status.SingleOrDefault(x => x.OS_CODE == dogovor.DG_SOR_CODE).OS_NAME_RUS,
-                Cost = new Cost
+            var predicate = PredicateBuilder.True<tbl_Dogovor>();
+            if ((request.Code ?? "") != "") predicate = predicate.And(x => x.DG_CODE == request.Code);
+            if (request.CreatePeriod != null) 
+                predicate = predicate.And(x => x.DG_CRDATE >= DateTime.Parse(request.CreatePeriod.Start, new CultureInfo("ru-Ru"))
+                                            && x.DG_CRDATE <= DateTime.Parse(request.CreatePeriod.Stop, new CultureInfo("ru-Ru")));
+            if ((request.TouristNameLike ?? "") != "")
+                predicate = predicate.And(x => db2.tbl_Turists.Where(y => y.TU_NAMERUS.ToLower().Contains(request.TouristNameLike.ToLower())).Select(y => y.TU_DGCOD).Contains(x.DG_CODE));
+            
+            var dogovors = db2.tbl_Dogovors.Where(predicate).ToList();
+
+            if (dogovors.Count() == 0) return Json("Заявки не найдены");
+
+            List<onedog> lst = new List<onedog>(); 
+
+            //var dogovor = db.tbl_Dogovors.SingleOrDefault(x => x.DG_CODE == request.Code);
+            //if (dogovor == null) return Json("Заявка не найдена");
+            foreach (var dogovor in dogovors)
+            { 
+                var dogovorlists = db2.tbl_DogovorLists.Where(x => x.DL_DGCOD == dogovor.DG_CODE).ToList();
+                var dogovorlistshotel = dogovorlists.Where(x => x.DL_SVKEY == 3 ).FirstOrDefault();
+                var turists = db2.tbl_Turists.Where(x => x.TU_DGCOD == dogovor.DG_CODE).ToList();
+                var hotelroom = dogovorlistshotel == null ? null : db2.HotelRooms.Where(x => x.HR_KEY == dogovorlistshotel.DL_SUBCODE1).SingleOrDefault();
+                var partner = db2.tbl_Partners.SingleOrDefault(x => x.PR_KEY == dogovor.DG_PARTNERKEY);
+                var dupuser = db2.DUP_USERs.SingleOrDefault(x => x.US_KEY == dogovor.DG_DUPUSERKEY);
+                var status = db2.Order_Status.SingleOrDefault(x => x.OS_CODE == dogovor.DG_SOR_CODE);
+
+                lst.Add(new onedog
                 {
-                    Brutto = dogovor.DG_PRICE,
-                    Netto = 0,
-                    Fee = dogovor.DG_DISCOUNTSUM
-                },
-                Fee = new Fee
-                {
-                    Fields = new decimal[] { (decimal)dogovor.DG_DISCOUNT },
-                    Case = "Percent"
-                },
-                Request = new delfin.mvc.api.Models.orderInfoResponse.Request
-                {
-                    Guests = turists.Select(x => new Guest
+                    Code = dogovor.DG_CODE,
+                    CreateDate = dogovor.DG_CRDATE.ToString("dd.MM.yyyy HH:mm:ss"),
+                    State = dogovor.DG_SOR_CODE == 30 ? "Rebooking" :
+                            status.OS_GLOBAL == 0 ? "InWork" :
+                            status.OS_GLOBAL == 1 ? "Undefined" :
+                            status.OS_GLOBAL == 2 ? "Annulated" :
+                            status.OS_GLOBAL == 3 ? "WaitList" :
+                            status.OS_GLOBAL == 7 ? "Ok" : db2.Order_Status.SingleOrDefault(x => x.OS_CODE == dogovor.DG_SOR_CODE).OS_NameLat,
+                    Cost = new Cost
                     {
-                        Birthday = x.TU_BIRTHDAY != null ? ((DateTime)x.TU_BIRTHDAY).ToString("dd.MM.yyyy") : "",
-                        Citizenship = x.TU_CITIZEN,
-                        DocumentNumber = x.TU_PASPRUNUM,
-                        DocumentSerial = x.TU_PASPRUSER,
-                        Id = x.TU_KEY,
-                        Phone = x.TU_PHONE,
-                        IsMale = (x.TU_SEX ?? 0) == 0,
-                        Cyrilic = new Cyrilic
+                        Brutto = dogovor.DG_PRICE,
+                        Netto = 0,
+                        Fee = dogovor.DG_DISCOUNTSUM,
+                        Rate = dogovor.DG_RATE
+                    },
+                    Fee = new Fee
+                    {
+                        Fields = new decimal[] { (decimal)dogovor.DG_DISCOUNT },
+                        Case = "Percent"
+                    },
+                    Request = new orderInfoResponse.Request
+                    {
+                        Guests = turists.Select(x => new Guest
                         {
-                            Name = x.TU_FNAMERUS,
-                            Patronymic = x.TU_SNAMERUS,
-                            SurName = x.TU_NAMERUS
+                            Birthday = x.TU_BIRTHDAY != null ? ((DateTime)x.TU_BIRTHDAY).ToString("dd.MM.yyyy") : "",
+                            Citizenship = x.TU_CITIZEN,
+                            DocumentNumber = x.TU_PASPRUNUM,
+                            DocumentSerial = x.TU_PASPRUSER,
+                            Id = x.TU_KEY,
+                            Phone = x.TU_PHONE,
+                            IsMale = (x.TU_SEX ?? 0) == 0,
+                            Cyrilic = new Cyrilic
+                            {
+                                Name = x.TU_FNAMERUS,
+                                Patronymic = x.TU_SNAMERUS,
+                                SurName = x.TU_NAMERUS
+                            },
+                            Latin = new Latin
+                            {
+                                Name = x.TU_FNAMELAT,
+                                Patronymic = x.TU_SNAMELAT,
+                                SurName = x.TU_NAMELAT
+                            }
+                        }).ToArray(),
+                        PriceKey = dogovorlistshotel == null ? null : new Pricekey
+                        {
+                            Hotel = dogovorlistshotel.DL_CODE,
+                            Date = dogovorlistshotel.DL_DATEBEG != null ? ((DateTime)dogovorlistshotel.DL_DATEBEG).ToString("dd.MM.yyyy") : "",
+                            Nights = (short)dogovorlistshotel.DL_NDAYS,
+                            Pansion = (int)dogovorlistshotel.DL_SUBCODE2,
+                            Tour = dogovorlistshotel.DL_TRKEY,
+                            Room = hotelroom.HR_RMKEY,
+                            RoomCat = hotelroom.HR_RCKEY
                         },
-                        Latin = new Latin
+                        Customer = new orderInfoResponse.Customer
                         {
-                            Name = x.TU_FNAMELAT,
-                            Patronymic = x.TU_SNAMELAT,
-                            SurName = x.TU_NAMELAT
+                            Case = "AgencyManager",
+                            Fields = new orderInfoResponse.Field[]
+                            {
+                            new orderInfoResponse.Field
+                            {
+                                Name = dupuser != null ? dupuser.US_FULLNAME : null,
+                                Id = dupuser != null ? dupuser.US_KEY : 0,
+                                IsActive = dupuser != null ?  (dupuser.US_REG ?? 0) == 1 : false,
+                                Agency = new Agency
+                                {
+                                    City = (int)(partner.PR_CTKEY ?? 0),
+                                    Id = partner.PR_KEY,
+                                    Name = partner.PR_NAME
+                                }
+                            }
+                            }
                         }
-                    }).ToArray(),
-                    PriceKey = new Pricekey
+                    },
+                    Services = dogovorlists.Select(x =>
+                    new orderInfoResponse.Service
                     {
-                        Hotel = dogovorlistshotel.DL_CODE,
-                        Date = dogovorlistshotel.DL_DATEBEG != null ? ((DateTime)dogovorlistshotel.DL_DATEBEG).ToString("dd.MM.yyyy") : "",
-                        Nights = (short)dogovorlistshotel.DL_NDAYS,
-                        Pansion = (int)dogovorlistshotel.DL_SUBCODE2,
-                        Tour = dogovorlistshotel.DL_TRKEY,
-                        Room = hotelroom.HR_RMKEY,
-                        RoomCat = hotelroom.HR_RCKEY
-                    }
-                },
-                Services = dogovorlists.Select(x =>
-                new orderInfoResponse.Service
-                {
-                    Brutto = (decimal)x.DL_BRUTTO,
-                    Fee = x.DL_KEY == dogovorlistshotel.DL_KEY ? dogovor.DG_DISCOUNTSUM : 0,
-                    Duration = (short)x.DL_NDAYS,
-                    Name = dogovor.DG_CODE.Contains("TPL") ? x.DL_NAME.Replace("HOTEL::", "Круиз ") :
-                        dogovor.DG_CODE.Contains("AVI") ? x.DL_NAME.Replace("А_П::", "Авиаперелет ") :
-                        dogovor.DG_CODE.Contains("INT") ? x.DL_NAME.Replace("Проживание::Академсервис/", "Проживание ") :
-                        x.DL_NAME,
-                    Persons = x.DL_NMEN,
-                    StartDate = x.DL_DATEBEG != null ? ((DateTime)x.DL_DATEBEG).ToString("dd.MM.yyyy") : "",
+                        Brutto = x.DL_BRUTTO,
+                        Fee = dogovorlistshotel == null ? 0M : x.DL_KEY == dogovorlistshotel.DL_KEY ? dogovor.DG_DISCOUNTSUM : 0,
+                        Duration = (short)(x.DL_NDAYS ?? 0),
+                        Name = dogovor.DG_CODE.Contains("TPL") ? x.DL_NAME.Replace("HOTEL::", "Круиз ") :
+                            dogovor.DG_CODE.Contains("AVI") ? x.DL_NAME.Replace("А_П::", "Авиаперелет ") :
+                            dogovor.DG_CODE.Contains("INT") ? x.DL_NAME.Replace("Проживание::Академсервис/", "Проживание ") :
+                            x.DL_NAME,
+                        Persons = x.DL_NMEN,
+                        StartDate = x.DL_DATEBEG != null ? ((DateTime)x.DL_DATEBEG).ToString("dd.MM.yyyy") : "",
 
-                }).ToArray()
-            };
+                    }).ToArray(),
+                    ExtendState = dogovor.DG_SOR_CODE == 34 ? "DoubleBooking" : null
+                });
+            }
 
-            db.Dispose();
+            //db.Dispose();
 
-            var content = Json(response, JsonRequestBehavior.AllowGet);
+            var content = Json(lst, JsonRequestBehavior.AllowGet);
             content.MaxJsonLength = int.MaxValue;
             return content;
         }
