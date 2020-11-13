@@ -6,6 +6,19 @@ using System.Web;
 namespace qiwi.Models
 {
 
+    public class reqTourDuration
+    {
+        public int[] tourkeys { get; set; }
+        public string date { get; set; }
+
+    }
+
+    public class Period
+    {
+        public string Start { get; set; }
+        public string Stop { get; set; }
+
+    }
     public class turlistsshort
     {
         public int TL_KEY { get; set; }

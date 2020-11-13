@@ -21,6 +21,10 @@ using System.Text;
 using Delfin.Data;
 using delfin.mvc.api.Models;
 using static delfin.mvc.api.Models.orderInfoResponse;
+using System.Threading.Tasks;
+using delfin.mvc.api.Models.gosha;
+using Microsoft.EntityFrameworkCore;
+using Delfin.Shared;
 
 //[Route("/json2/subagents")]
 namespace qiwi.Controllers
@@ -66,7 +70,7 @@ namespace qiwi.Controllers
             content.MaxJsonLength = int.MaxValue;
             return content;
         }
-        
+
         public JsonResult RoomCategories()
         {
             JsonResult content = null;
@@ -75,10 +79,111 @@ namespace qiwi.Controllers
             return content;
         }
 
+        //public JsonResult ToursDuration()
+
+
+        [HttpPost]
+        public JsonResult ToursDuration(reqTourDuration req)
+        {
+            //var req = JsonConvert.DeserializeObject<reqTourDuration>("{\"tourkeys\": [3278],\"date\": \"01.12.2020\"}");
+
+            using (var gosha = new goshaContext())
+            {
+                //var toKey = gosha.TpTours.SingleOrDefault(x => x.ToTrkey == req.tourkeys[0]).ToKey;
+                
+                var toKeys = gosha.TpTours.Where(x => req.tourkeys.Contains(x.ToTrkey)).Select(x => x.ToKey).ToList();
+
+                var Lists = gosha.TpLists
+                    .Where(x => toKeys.Contains(x.TiTokey))
+                    .ToList();
+
+                var Prices = gosha.TpPrices
+                    .Where(x => toKeys.Contains(x.TpTokey) && x.TpDateBegin == DateTime.Parse(req.date, cultureinfo))
+                    .ToList();
+
+                var obj = (from lists in Lists
+                         join prices in Prices on lists.TiKey equals prices.TpTikey
+                         select lists.TiDays -1)
+                        .Distinct()
+                        .OrderBy(x => x)
+                        .ToList();
+
+                JsonResult content = null;
+                content = Json(obj);
+                content.MaxJsonLength = int.MaxValue;
+                return content;
+            }
+        }
+
+        public JsonResult TourRestrictions(int id)
+        {
+            using (var gosha = new goshaContext())
+            {
+                var toKey = gosha.TpTours.SingleOrDefault(x => x.ToTrkey == id).ToKey;
+
+                var tourNights = gosha.TpLists
+                    .Where(x => x.TiTokey == toKey)
+                    //.Include(x => x.TpPrices)
+                    .Select(x => x.TiDays - 1)
+                    .Distinct()
+                    .OrderBy(x => x)
+                    .ToList();
+
+                var tourDates = gosha.TpTurDates
+                    .Where(x => x.TdTokey == toKey && x.TdDate >= DateTime.Now.Date)
+                    .Select(x => x.TdDate)
+                    .Distinct()
+                    .OrderBy(x => x)
+                    .ToList();
+
+
+                List<Period> periods = new List<Period>();
+                var dFirst = tourDates.Min();
+                var dLast = tourDates.Min().AddDays(-1);
+                foreach (var d in tourDates)
+                {
+                    if (d.AddDays(-1) != dLast)
+                    {
+                        periods.Add(new Period
+                        {
+                            Start = dFirst.ToString("dd.MM.yyyy"),
+                            Stop = dLast.ToString("dd.MM.yyyy")
+                        });
+                        dFirst = d;
+                    }
+                    dLast = d;
+                }
+
+                periods.Add(new Period
+                {
+                    Start = dFirst.ToString("dd.MM.yyyy"),
+                    Stop = dLast.ToString("dd.MM.yyyy")
+                });
+
+                JsonResult content = null;
+                content = Json(Tuple.Create(tourNights, periods), JsonRequestBehavior.AllowGet);
+                content.MaxJsonLength = int.MaxValue;
+                return content;
+            }
+        }
+
         public JsonResult GetCourses()
         {
             JsonResult content = null;
-            content = Json(db.dlf_RealCourses.Where(x => x.RC_DATEBEG >= DateTime.Now.Date).ToList(), JsonRequestBehavior.AllowGet);
+            var courses = db.dlf_RealCourses
+                .Where(x => x.RC_DATEBEG >= DateTime.Now.Date)
+                .ToList();
+            content = Json(courses
+                .Select(x => new { 
+                    RC_RCOD1 = x.RC_RCOD1,
+                    RC_RCOD2 = x.RC_RCOD2,
+                    RC_DATEBEG = ((DateTime)x.RC_DATEBEG).ToString("dd.MM.yyyy"),
+                    RC_DATEEND = ((DateTime)x.RC_DATEEND).ToString("dd.MM.yyyy"),
+                    RC_Key = x.RC_Key,
+                    RC_COURSE = x.RC_COURSE,
+                    RC_COURSE_CB = x.RC_COURSE_CB
+                })
+                .ToList(), JsonRequestBehavior.AllowGet);
             content.MaxJsonLength = int.MaxValue;
             return content;
         }
@@ -870,7 +975,14 @@ namespace qiwi.Controllers
                                 SurName = x.TU_NAMELAT
                             }
                         }).ToArray(),
-                        PriceKey = dogovorlistshotel == null ? null : new Pricekey
+                        PriceKey = dogovorlistshotel == null 
+                        ? new Pricekey
+                        {
+                            Nights = (short)(Convert.ToInt16(dogovor.DG_NDAY) - 1),
+                            Date = dogovor.DG_TURDATE.ToString("dd.MM.yyyy"),
+                            Tour = (int)dogovor.DG_TRKEY
+                        }
+                        : new Pricekey
                         {
                             Hotel = dogovorlistshotel.DL_CODE,
                             Date = dogovorlistshotel.DL_DATEBEG != null ? ((DateTime)dogovorlistshotel.DL_DATEBEG).ToString("dd.MM.yyyy") : "",

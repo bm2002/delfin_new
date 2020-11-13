@@ -546,6 +546,11 @@
     <Compile Include="Migrations\log\logContextModelSnapshot.cs" />
     <Compile Include="Models\dbContext.cs" />
     <Compile Include="Models\getTables.cs" />
+    <Compile Include="Models\gosha\goshaContext.cs" />
+    <Compile Include="Models\gosha\TpLists.cs" />
+    <Compile Include="Models\gosha\TpPrices.cs" />
+    <Compile Include="Models\gosha\TpTours.cs" />
+    <Compile Include="Models\gosha\TpTurDates.cs" />
     <Compile Include="Models\HotelPricing2.cs" />
     <Compile Include="Models\logContext.cs" />
     <Compile Include="Models\orderInfoRequest.cs" />
