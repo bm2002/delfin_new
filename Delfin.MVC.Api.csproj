@@ -287,6 +287,10 @@
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceModel.Primitives, Version=4.8.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.ServiceModel.Primitives.4.8.0\lib\net461\System.ServiceModel.Primitives.dll</HintPath>
+    </Reference>
     <Reference Include="System.Text.RegularExpressions, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>packages\System.Text.RegularExpressions.4.3.0\lib\net463\System.Text.RegularExpressions.dll</HintPath>
       <Private>True</Private>
@@ -370,6 +374,7 @@
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Controllers\hotel1cController.cs" />
     <Compile Include="Controllers\json2Controller.cs" />
     <Compile Include="Controllers\qiwiController.cs" />
     <Compile Include="Controllers\academserviceController.cs" />
@@ -544,6 +549,7 @@
       <DependentUpon>20200521145355_InitialCreate.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\log\logContextModelSnapshot.cs" />
+    <Compile Include="Models\1c\1c.cs" />
     <Compile Include="Models\dbContext.cs" />
     <Compile Include="Models\getTables.cs" />
     <Compile Include="Models\gosha\goshaContext.cs" />
@@ -606,6 +612,7 @@
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Views\academservice\" />
+    <Folder Include="Views\hotel1c\" />
     <Folder Include="Views\json2\" />
     <Folder Include="Views\qiwi\" />
   </ItemGroup>

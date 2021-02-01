@@ -427,6 +427,18 @@ namespace qiwi.Controllers
             return content;
         }
 
+
+        //private void log (string error)
+        //{
+        //    dlf_logERV log = new dlf_logERV
+        //    {
+        //        dgcode = "ACADEM",
+        //        date = DateTime.Now,
+        //        text = error
+        //    };
+        //    db.dlf_logERVs.
+        //}
+
         public JsonResult AcademHotels(int area)
         {
             JsonResult content = null;
@@ -893,6 +905,70 @@ namespace qiwi.Controllers
             return Json("test", JsonRequestBehavior.AllowGet);
         }
 
+        [HttpPost]
+        public JsonResult AnnulateOrder(orderInfoRequest request)
+        {
+            var order = db2.tbl_Dogovors.SingleOrDefault(x => x.DG_CODE == request.Code);
+
+            var date = order.DG_TURDATE;
+            var MinDate = new DateTime(1899, 12, 30);
+
+            if (date > MinDate) order.DG_TurDateBfrAnnul = date;
+
+            order.DG_PRICEBFRANN = order.DG_PRICE;
+            order.DG_DISCSUMBFRANN = order.DG_DISCOUNTSUM;
+            order.DG_DISCOUNTSUM = 0M;
+            order.DG_PRICE = 0M;
+            order.DG_TURDATE = MinDate;
+            order.DG_ARKey = 7;
+            order.DG_SOR_CODE = 2;
+            //order.DG_ProTourFlag = (int)Extern.Channel.State.New;
+            db2.Refresh(RefreshMode.KeepChanges, order);
+            db2.SubmitChanges(ConflictMode.ContinueOnConflict);
+
+            foreach (var guest in db2.tbl_Turists.Where(_ => _.TU_DGKEY == order.DG_Key).ToArray())
+            {
+                guest.TU_TURDATE = MinDate;
+                db2.Refresh(RefreshMode.KeepChanges, guest);
+            }
+
+            var lists = db2.tbl_DogovorLists.Where(x => x.DL_DGCOD == order.DG_CODE).ToList();
+
+            foreach (var list in lists)
+            {
+                list.DL_TURDATE = MinDate;
+                list.DL_DATEBEG = MinDate;
+                list.DL_DATEEND = MinDate;
+                list.DL_REALNETTO = 0M;
+                list.DL_BRUTTO = 0M;
+                list.DL_COST = 0M;
+                list.DL_FORMULANETTO = "";
+                list.DL_FORMULABRUTTO = "";
+                list.DL_FormulaDiscount = "";
+                db2.Refresh(RefreshMode.KeepChanges, list);
+            }
+
+            string logText = $"Аннулирование заказа {order.DG_CODE}: цена {order.DG_PRICEBFRANN} {order.DG_RATE}, дата заезда - {date.ToString("dd.MM.yyyy")}";
+
+            var item = new History
+            {
+                HI_DGCOD = order.DG_CODE,
+                HI_DGKEY = order.DG_Key,
+                HI_MOD = "ANN",
+                HI_DATE = DateTime.Now,
+                HI_TEXT = logText.TrimTo(252),
+                //HI_REMARK = comment.TrimTo(24),
+                //HI_WHO = userName.TrimTo(24),
+                HI_MessEnabled = 0
+            };
+            db2.Histories.InsertOnSubmit(item);
+            db2.SubmitChanges();
+            
+            return Json(new { code = order.DG_CODE, status = "ANN" });
+
+            //return null;
+        }
+
         //[HttpGet]
         //public JsonResult OrdersInfo()
         [HttpPost]
@@ -1012,7 +1088,8 @@ namespace qiwi.Controllers
                             }
                         }
                     },
-                    Services = dogovorlists.Select(x =>
+                    //Services = dogovorlists.Select(x =>
+                    Services = dogovorlists.Join(db.Services, x => x.DL_SVKEY, y => y.SV_KEY, (x, y) =>
                     new orderInfoResponse.Service
                     {
                         Brutto = x.DL_BRUTTO,
@@ -1024,7 +1101,9 @@ namespace qiwi.Controllers
                             x.DL_NAME,
                         Persons = x.DL_NMEN,
                         StartDate = x.DL_DATEBEG != null ? ((DateTime)x.DL_DATEBEG).ToString("dd.MM.yyyy") : "",
-
+                        IsInvisible = ((x.DL_ATTRIBUTE ?? 0) & 64) == 64,
+                        IsDeletable = ((x.DL_ATTRIBUTE ?? 0) & 1) == 1,
+                        Type = (y.SV_StdKey != null ? y.SV_StdKey : y.SV_NAMELAT != null ? y.SV_NAMELAT : "Custom").Trim()
                     }).ToArray(),
                     ExtendState = dogovor.DG_SOR_CODE == 34 ? "DoubleBooking" : null
                 });
